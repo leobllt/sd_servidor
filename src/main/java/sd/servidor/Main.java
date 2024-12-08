@@ -4,6 +4,8 @@ package sd.servidor;
 
 import sd.servidor.backend.ConexaoTCP;
 import sd.servidor.backend.Controlador;
+
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.util.Scanner;
 
@@ -17,7 +19,8 @@ public class Main {
         ServerSocket soqueteServidor = null;
 
         try {
-            System.out.println("Para iniciar o servidor, informe a porta: ");
+            System.out.println("O IP desta máquina é " + Inet4Address.getLocalHost().getHostAddress());
+            System.out.print("Para iniciar o servidor, informe a porta: ");
             entradaUsuario = new Scanner(System.in);
             soqueteServidor = new ServerSocket(entradaUsuario.nextInt());
             entradaUsuario.close();

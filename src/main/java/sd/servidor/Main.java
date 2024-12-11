@@ -7,16 +7,16 @@ import sd.servidor.backend.Controlador;
 
 import java.net.Inet4Address;
 import java.net.ServerSocket;
-import java.util.Scanner;
+import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class Main {
 
     public static void main(String[] args) {
-        Controlador controlador = new Controlador();
-        if(!controlador.conectarBD()) System.exit(1);
-
         Scanner entradaUsuario;
         ServerSocket soqueteServidor = null;
+        List<String> usuariosLogados = Collections.synchronizedList(new ArrayList<String>());
 
         try {
             System.out.println("O IP desta máquina é " + Inet4Address.getLocalHost().getHostAddress());
@@ -26,8 +26,9 @@ public class Main {
             entradaUsuario.close();
 
             System.out.println("Aguardando conexões");
-            while(true)
-                new ConexaoTCP(soqueteServidor.accept(), controlador);
+            while(true) {
+                new ConexaoTCP(soqueteServidor.accept(), new Controlador(usuariosLogados));
+            }
         }
         catch (Exception e) {
             System.out.println("ERRO: " + e.getMessage());
@@ -40,7 +41,5 @@ public class Main {
                 System.out.println("ERRO: " + e.getMessage());
             }
         }
-
-        controlador.desconectarBD();
     }
 }

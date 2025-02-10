@@ -4,14 +4,13 @@ package sd.servidor.backend;
 
 public class Usuario {
     private final String RA;
-    private final String nome;
+    private String nome;
     private final String token;
-    private final String password;
     private final boolean admin;
+    private String senha;
 
-    public Usuario(String RA, String password, String nome, String token, boolean admin) {
+    public Usuario(String RA, String nome, String senha, String token, boolean admin) {
         this.RA = RA;
-        this.password = password;
         this.nome = nome;
         this.token = token;
         this.admin = admin;
@@ -25,6 +24,18 @@ public class Usuario {
         return this.nome;
     }
 
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getSenha() {
+        return this.senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
+
     public String getToken() {
         return this.token;
     }
@@ -33,7 +44,8 @@ public class Usuario {
         return this.admin;
     }
 
-    public boolean comparePassword(String password) {
-        return this.password.equals(password);
+    @Override
+    public String toString() {
+        return "Usuario("+nome+", "+token+", "+senha+", "+admin+")";
     }
 }

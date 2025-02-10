@@ -3,28 +3,43 @@ package sd.servidor.backend;
 // @Author Leonardo Bellato
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BD {
     private Connection conexao;
-    private PreparedStatement queryInsert;
-    private PreparedStatement querySelect;
-    //private PreparedStatement queryUpdate;
-    //private PreparedStatement queryDelete;
+    // Queries usuário
+    private PreparedStatement queryInsertUser;
+    private PreparedStatement querySelectUser ;
+    private PreparedStatement queryUpdateUser;
+    private PreparedStatement queryAdminUser;
+    private PreparedStatement queryDeleteUser;
+    // Queries categoria
+    private PreparedStatement queryInsertCat;
+    private PreparedStatement queryUpdateCat;
+    private PreparedStatement queryDeleteCat;
 
     private BD() {}
 
     public static BD conectar() throws SQLException {
         BD bd = new BD();
         bd.conexao = null;
-        String path = "jdbc:sqlite:src/main/java/sd/servidor/backend/usuarios.db";
+        String path = "jdbc:sqlite:src/main/java/sd/servidor/backend/dados.db";
 
         bd.conexao = DriverManager.getConnection(path);
         bd.criarTabela();
-        //bd.limparTabela();
-        bd.queryInsert = bd.conexao.prepareStatement("INSERT INTO usuarios VALUES(?, ?, ?, ?, ?)");
-        bd.querySelect = bd.conexao.prepareStatement("SELECT * FROM usuarios WHERE ra = ?");
-        //bd.queryUpdate = conexao.prepareStatement("UPDATE usuarios SET id = ? WHERE id = ?");
-        //bd.queryDelete = conexao.prepareStatement("DELETE FROM usuarios WHERE id = ?");
+        bd.queryInsertUser = bd.conexao.prepareStatement("INSERT INTO usuarios (nome, ra, senha, admin) VALUES(?, ?, ?, ?)");
+        bd.querySelectUser = bd.conexao.prepareStatement("SELECT nome, ra, senha, admin FROM usuarios WHERE ra = ?");
+        bd.queryUpdateUser = bd.conexao.prepareStatement("UPDATE usuarios SET nome = ?, senha = ? WHERE ra = ?");
+        bd.queryAdminUser = bd.conexao.prepareStatement("UPDATE usuarios SET admin = 1 WHERE ra = ?");
+        bd.queryDeleteUser = bd.conexao.prepareStatement("DELETE FROM usuarios WHERE ra = ?");
+
+        bd.queryInsertCat = bd.conexao.prepareStatement("INSERT INTO categorias (nome, descricao) VALUES(?, ?)");
+        bd.queryUpdateCat = bd.conexao.prepareStatement("UPDATE categorias SET nome = ?, descricao = ? WHERE id = ?");
+        bd.queryDeleteCat = bd.conexao.prepareStatement("DELETE FROM categorias WHERE id = ?");
+
+        //admin
+        bd.inserirUsuario("Administrador", "1234567", "1234");
 
         if(bd.conexao != null) return bd;
         else return null;
@@ -36,40 +51,54 @@ public class BD {
 
     public void criarTabela() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS usuarios ("
-                    + "	id INTEGER PRIMARY KEY,"
-                    + "	nome TEXT NOT NULL,"
-                    + "	ra TEXT NOT NULL,"
-                    + "	senha TEXT NOT NULL,"
-                    + " admin INTEGER NOT NULL"
-                    + ")";
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "	nome TEXT NOT NULL,"
+                + "	ra TEXT NOT NULL,"
+                + "	senha TEXT NOT NULL,"
+                + " admin INTEGER NOT NULL"
+                + ")";
+
+        String sql2 = "CREATE TABLE IF NOT EXISTS categorias ("
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "	nome TEXT NOT NULL,"
+                + "	descricao TEXT"
+                + ")";
 
         Statement queryCreate = this.conexao.createStatement();
         queryCreate.execute(sql);
-    }
-
-    public void limparTabela() throws SQLException {
-        String sql = "DELETE FROM usuarios";
-
-        Statement queryDelete = this.conexao.createStatement();
-        queryDelete.execute(sql);
+        queryCreate.execute(sql2);
     }
 
     public void inserirUsuario(String nome, String RA, String senha) throws SQLException {
-        if(encontrarUsuario(RA) != null) return;
+        this.queryInsertUser.setString(1, nome);
+        this.queryInsertUser.setString(2, RA);
+        this.queryInsertUser.setString(3, senha);
+        this.queryInsertUser.setInt(4, 0);
+        this.queryInsertUser.executeUpdate();
+    }
 
-        this.queryInsert.setNull(1, Types.INTEGER);
-        this.queryInsert.setString(2, nome);
-        this.queryInsert.setString(3, RA);
-        this.queryInsert.setString(4, senha);
-        this.queryInsert.setInt(5, 0);
-        this.queryInsert.executeUpdate();
+    public void editarUsuario(String RA, String nome, String senha) throws SQLException{
+        this.queryUpdateUser.setString(1, nome);
+        this.queryUpdateUser.setString(2, senha);
+        this.queryUpdateUser.setString(3, RA);
+        this.queryUpdateUser.executeUpdate();
+    }
+
+    public void deletarUsuario(String RA) throws SQLException {
+        this.queryDeleteUser.setString(1, RA);
+        this.queryDeleteUser.executeUpdate();
+    }
+
+    public void subirAAdmin(String RA) throws SQLException {
+        this.queryAdminUser.setString(1, RA);
+        this.queryAdminUser.executeUpdate();
     }
 
     public Usuario encontrarUsuario(String RA) throws SQLException {
-        this.querySelect.setString(1, RA);
-        ResultSet resultado = this.querySelect.executeQuery();
+        this.querySelectUser.setString(1, RA);
+        ResultSet resultado = this.querySelectUser.executeQuery();
 
-        if(!resultado.isBeforeFirst()) return null;
+        if(!resultado.isBeforeFirst()) return null; // Se não houver resultados
 
         resultado.next();
         return new Usuario(
@@ -80,4 +109,67 @@ public class BD {
                 (resultado.getInt("admin") == 1)
         );
     }
+
+    public Usuario[] listarUsuarios() throws SQLException {
+        String sql = "SELECT * FROM usuarios";
+        Statement querySelectAllUser = this.conexao.createStatement();
+
+        ResultSet resultado = querySelectAllUser.executeQuery(sql);
+
+        if (!resultado.isBeforeFirst()) return null; // Se não houver resultados
+
+        List<Usuario> usuarios = new ArrayList<>();
+
+        while (resultado.next()) {
+            usuarios.add(new Usuario(
+                    resultado.getString("ra"),
+                    resultado.getString("senha"),
+                    resultado.getString("nome"),
+                    null,
+                    resultado.getInt("admin") == 1
+            ));
+        }
+
+        return usuarios.toArray(Usuario[]::new);
+    }
+
+    public void inserirCategoria(String nome, String descricao) throws SQLException {
+        this.queryInsertCat.setString(1, nome);
+        this.queryInsertCat.setString(2, descricao);
+        this.queryInsertCat.executeUpdate();
+    }
+
+    public void editarCategoria(int id, String nome, String descricao) throws SQLException, NumberFormatException{
+        this.queryUpdateCat.setString(1, nome);
+        this.queryUpdateCat.setString(2, descricao);
+        this.queryUpdateCat.setInt(3, id);
+        this.queryUpdateCat.executeUpdate();
+    }
+
+    public void deletarCategoria(int id) throws SQLException {
+        this.queryDeleteCat.setInt(1, id);
+        this.queryDeleteCat.executeUpdate();
+    }
+
+    public Categoria[] listarCategorias() throws SQLException {
+        String sql = "SELECT * FROM categorias";
+        Statement querySelectAllCat = this.conexao.createStatement();
+
+        ResultSet resultado = querySelectAllCat.executeQuery(sql);
+
+        if (!resultado.isBeforeFirst()) return null; // Se não houver resultados
+
+        List<Categoria> categorias = new ArrayList<>();
+
+        while (resultado.next()) {
+            categorias.add(new Categoria(
+                    String.valueOf(resultado.getInt("id")),
+                    resultado.getString("nome"),
+                    resultado.getString("descricao")
+            ));
+        }
+
+        return categorias.toArray(Categoria[]::new);
+    }
+
 }

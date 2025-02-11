@@ -29,8 +29,10 @@ public class ConexaoTCP extends Thread {
                 this.comunicar();
             } catch (Exception e) {
                 System.out.println("ERRO: " + e.getMessage());
+                break;
             }
         }
+        this.controlador.desconectarBD();
     }
 
     public void comunicar() throws IOException {

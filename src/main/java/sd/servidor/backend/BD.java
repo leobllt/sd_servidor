@@ -29,7 +29,7 @@ public class BD {
         bd.conexao = DriverManager.getConnection(path);
         bd.criarTabela();
         bd.queryInsertUser = bd.conexao.prepareStatement("INSERT INTO usuarios (nome, ra, senha, admin) VALUES(?, ?, ?, ?)");
-        bd.querySelectUser = bd.conexao.prepareStatement("SELECT nome, ra, senha, admin FROM usuarios WHERE ra = ?");
+        bd.querySelectUser = bd.conexao.prepareStatement("SELECT ra, senha, nome, admin FROM usuarios WHERE ra = ?");
         bd.queryUpdateUser = bd.conexao.prepareStatement("UPDATE usuarios SET nome = ?, senha = ? WHERE ra = ?");
         bd.queryAdminUser = bd.conexao.prepareStatement("UPDATE usuarios SET admin = 1 WHERE ra = ?");
         bd.queryDeleteUser = bd.conexao.prepareStatement("DELETE FROM usuarios WHERE ra = ?");
@@ -40,6 +40,7 @@ public class BD {
 
         //admin
         bd.inserirUsuario("Administrador", "1234567", "1234");
+        bd.subirAAdmin("1234567");
 
         if(bd.conexao != null) return bd;
         else return null;
@@ -98,13 +99,12 @@ public class BD {
         this.querySelectUser.setString(1, RA);
         ResultSet resultado = this.querySelectUser.executeQuery();
 
-        if(!resultado.isBeforeFirst()) return null; // Se não houver resultados
+        if (!resultado.next()) return null; // Se não houver resultados
 
-        resultado.next();
         return new Usuario(
                 resultado.getString("ra"),
-                resultado.getString("senha"),
                 resultado.getString("nome"),
+                resultado.getString("senha"),
                 null,
                 (resultado.getInt("admin") == 1)
         );
@@ -123,8 +123,8 @@ public class BD {
         while (resultado.next()) {
             usuarios.add(new Usuario(
                     resultado.getString("ra"),
-                    resultado.getString("senha"),
                     resultado.getString("nome"),
+                    resultado.getString("senha"),
                     null,
                     resultado.getInt("admin") == 1
             ));

@@ -30,43 +30,43 @@ public class Mensagem {
     }
 
     public String getOp() {
-        return op;
+        return this.op;
     }
-    public void setOp(String op) { this.setOp(op); }
+    public void setOp(String op) { this.op = op; }
 
     public String getUser() {
-        return user;
+        return this.user;
     }
-    public void setUser(String user) { this.setUser(user); }
+    public void setUser(String user) { this.user = user; }
 
     public String getPassword() {
-        return password;
+        return this.password;
     }
-    public void setPassword(String password) { this.setPassword(password); }
+    public void setPassword(String password) { this.password = password; }
 
     public String getName() {
-        return name;
+        return this.name;
     }
-    public void setName(String name) { this.setName(name); }
+    public void setName(String name) { this.name = name; }
 
     public String getToken() {
-        return token;
+        return this.token;
     }
-    public void setToken(String token) { this.setToken(token); }
+    public void setToken(String token) { this.token = token; }
 
     public String getResponse() {
-        return response;
+        return this.response;
     }
-    public void setResponse(String response) { this.setResponse(response); }
+    public void setResponse(String response) { this.response = response; }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
-    public void setMessage(String message) { this.setMessage(message); }
+    public void setMessage(String message) { this.message = message; }
 
-    public Categoria[] getCategories() { return categories; }
-    public void setCategories(List<Categoria> categories) { this.setCategories(categories); }
+    public Categoria[] getCategories() { return this.categories; }
+    public void setCategories(Categoria[] categories) { this.categories = categories; }
 
-    public String[] getCategoryIds() { return categoryIds; }
-    public void setCategoryIds(List<String> categoryIds) { this.setCategoryIds(categoryIds); }
+    public String[] getCategoryIds() { return this.categoryIds; }
+    public void setCategoryIds(String[] categoryIds) { this.categoryIds = categoryIds; }
 }

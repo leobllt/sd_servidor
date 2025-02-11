@@ -143,7 +143,6 @@ public class Controlador {
 
         try{
             usuario = this.bancoDados.encontrarUsuario(RA);
-            System.out.println(usuario);
             if(usuario == null || !usuario.getSenha().equals(senha))
                 return gson.toJson(new Mensagem("003", "Login failed.", null));
 
@@ -155,10 +154,9 @@ public class Controlador {
         synchronized (this.usuariosLogados) {
             if(!this.usuariosLogados.contains(new Pair<>(RA, usuario.isAdmin()))) {
                 this.usuariosLogados.add(new Pair<>(RA, usuario.isAdmin()));
-                if(usuario.isAdmin())
-                    return gson.toJson(new Mensagem("001", "Successful login.", null));
-                else
-                    return gson.toJson(new Mensagem("000", "Successful login.", null));
+                Mensagem msg = new Mensagem((usuario.isAdmin()) ? "001" : "000", "Successful login.", null);
+                msg.setToken(usuario.getRA());
+                return gson.toJson(msg);
             }
             else
                 return gson.toJson(new Mensagem("004", "Already logged in.", null));

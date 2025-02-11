@@ -12,6 +12,7 @@ public class Usuario {
     public Usuario(String RA, String nome, String senha, String token, boolean admin) {
         this.RA = RA;
         this.nome = nome;
+        this.senha = senha;
         this.token = token;
         this.admin = admin;
     }
@@ -46,6 +47,6 @@ public class Usuario {
 
     @Override
     public String toString() {
-        return "Usuario("+nome+", "+token+", "+senha+", "+admin+")";
+        return "Usuario(" + this.RA + ", " + this.nome + ", " + token + ", " + senha + ", " + admin + ")";
     }
 }

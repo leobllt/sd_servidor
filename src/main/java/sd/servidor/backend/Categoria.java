@@ -2,10 +2,12 @@ package sd.servidor.backend;
 
 // @Author Leonardo Bellato
 
+import java.util.Objects;
+
 public class Categoria {
-    String id;
-    String name;
-    String description;
+    private String id;
+    private String name;
+    private String description;
 
     public Categoria() {}
 
@@ -27,5 +29,18 @@ public class Categoria {
     @Override
     public String toString(){
         return id + " " + name + " " + description;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Categoria categoria = (Categoria) obj;
+        return this.id.equals(categoria.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

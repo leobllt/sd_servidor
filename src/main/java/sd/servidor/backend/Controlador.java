@@ -11,12 +11,10 @@ import java.util.regex.Pattern;
 public class Controlador {
     private final BD bancoDados;
     private final List<Pair<String,Boolean>> usuariosLogados;
-    private final List<Categoria> categorias;
     private final Gson gson;
 
-    public Controlador(List<Pair<String,Boolean>> usuariosLogados, List<Categoria> categorias) throws SQLException {
+    public Controlador(List<Pair<String,Boolean>> usuariosLogados) throws SQLException {
         this.usuariosLogados = usuariosLogados;
-        this.categorias = categorias;
         gson = new Gson();
         this.bancoDados = BD.conectar();
     }
@@ -170,6 +168,122 @@ public class Controlador {
         return gson.toJson(new Mensagem("012", "User not logged in.", null));
     }
 
+    /* Aviso:
+                Meu programa vai lendo as categorias e cadastrando normalmente.
+                Se encontrar uma categoria com erro (faltando campo), vai parar o cadastro e retornar erro.
+                Porém, as categorias cadastradas antes ficaram salvas.
+    */
+    public String cadastrarCategorias(String token, Categoria[] categorias){
+        try {
+            if(!this.bancoDados.encontrarUsuario(token).isAdmin()) // usuario nao for admin
+                return gson.toJson(new Mensagem("202", "Invalid token.", null));
+
+            for(Categoria c: categorias){
+                if(c == null)
+                    return gson.toJson(new Mensagem("400", "Invalid JSON.", null));
+
+                if(c.getName() == null || c.getName().isBlank())
+                    return gson.toJson(new Mensagem("201", "Fields missing.", null));
+                if(c.getDescription() == null) c.setDescription("");
+
+                this.bancoDados.inserirCategoria(c.getName(), c.getDescription());
+            }
+
+            return gson.toJson(new Mensagem("200", "Successful category creation.", null));
+        }
+        catch (SQLException e) {
+            System.out.println("ERRO de BD: " + e.getMessage());
+            return gson.toJson(new Mensagem("203", "Unknown error.", null));
+        }
+    }
+
+    public String consultarCategorias(String token){
+        try {
+            if(!this.bancoDados.encontrarUsuario(token).isAdmin()) // usuario nao for admin
+                return gson.toJson(new Mensagem("212", "Invalid token.", null));
+
+            return gson.toJson(new Mensagem(
+                    "210",
+                    "Successful category read.",
+                    this.bancoDados.listarCategorias())
+            );
+        }
+        catch (SQLException e) {
+            System.out.println("ERRO de BD: " + e.getMessage());
+            return gson.toJson(new Mensagem("213", "Unknown error.", null));
+        }
+    }
+
+    private Categoria procurarCategoria(String id) throws SQLException{
+        return this.bancoDados.encontrarCategoria(Integer.parseInt(id));
+    }
+
+    public String editarCategorias(String token, Categoria[] categorias){
+        try {
+            if(!this.bancoDados.encontrarUsuario(token).isAdmin()) // usuario nao for admin
+                return gson.toJson(new Mensagem("222", "Invalid token.", null));
+
+            if(categorias == null || categorias.length == 0)
+                return gson.toJson(new Mensagem("221", "Fields missing.", null));
+
+            for(Categoria c: categorias){
+                if(c == null)
+                    return gson.toJson(new Mensagem("400", "Invalid JSON.", null));
+
+                if(c.getId() == null || c.getId().isBlank())
+                    return gson.toJson(new Mensagem("221", "Fields missing.", null));
+
+                Categoria temp = this.procurarCategoria(c.getId());
+                if(temp == null)
+                    return gson.toJson(new Mensagem("223", "Invalid information inserted.", null));
+
+                if(c.getName() == null || c.getName().isBlank()) c.setName(temp.getName());
+                if(c.getDescription() == null || c.getDescription().isBlank()) c.setDescription("");
+
+                this.bancoDados.editarCategoria(Integer.parseInt(c.getId()), c.getName(), c.getDescription());
+            }
+
+            return gson.toJson(new Mensagem("220", "Successful category update.", null));
+        }
+        catch (SQLException e) {
+            System.out.println("ERRO de BD: " + e.getMessage());
+            return gson.toJson(new Mensagem("224", "Unknown error.", null));
+        }
+        catch (Exception e) {
+            return gson.toJson(new Mensagem("224", "Unknown error.", null));
+        }
+    }
+
+    public String excluirCategorias(String token, String[] categoriasIds){
+        try {
+            if(!this.bancoDados.encontrarUsuario(token).isAdmin()) // usuario nao for admin
+                return gson.toJson(new Mensagem("232", "Invalid token.", null));
+
+            if(categoriasIds == null || categoriasIds.length == 0)
+                return gson.toJson(new Mensagem("231", "Fields missing.", null));
+
+            for(String id: categoriasIds){
+                if(id == null)
+                    return gson.toJson(new Mensagem("400", "Invalid JSON.", null));
+
+                Categoria temp = this.procurarCategoria(id);
+                if(temp == null)
+                    return gson.toJson(new Mensagem("233", "Invalid information inserted.", null));
+
+                this.bancoDados.deletarCategoria(Integer.parseInt(id));
+            }
+
+            return gson.toJson(new Mensagem("230", "Successful category deletion.", null));
+        }
+        catch (SQLException e) {
+            System.out.println("ERRO de BD: " + e.getMessage());
+            return gson.toJson(new Mensagem("235", "Unknown error.", null));
+        }
+        catch (Exception e) {
+            return gson.toJson(new Mensagem("235", "Unknown error.", null));
+        }
+    }
+
     public String processarRequisicao(String requisicaoJson){
         Mensagem req = gson.fromJson(requisicaoJson, Mensagem.class);
 
@@ -205,9 +319,29 @@ public class Controlador {
                 return logarUsuario(req.getUser(), req.getPassword());
 
             case "6":
-                if(req.getToken() == null || req.getToken().isBlank())
+                if(req.getToken() == null || req.getToken().isBlank() || !validarRA(req.getToken()))
                     return gson.toJson(new Mensagem("011", "Fields missing.", null));
                 return deslogarUsuario(req.getToken());
+
+            case "7":
+                if(req.getToken() == null || req.getToken().isBlank() || !validarRA(req.getToken()))
+                    return gson.toJson(new Mensagem("201", "Fields missing.", null));
+                return cadastrarCategorias(req.getToken(), req.getCategories());
+
+            case "8":
+                if(req.getToken() == null || req.getToken().isBlank() || !validarRA(req.getToken()))
+                    return gson.toJson(new Mensagem("211", "Fields missing.", null));
+                return consultarCategorias(req.getToken());
+
+            case "9":
+                if(req.getToken() == null || req.getToken().isBlank() || !validarRA(req.getToken()))
+                    return gson.toJson(new Mensagem("221", "Fields missing.", null));
+                return editarCategorias(req.getToken(), req.getCategories());
+
+            case "10":
+                if(req.getToken() == null || req.getToken().isBlank() || !validarRA(req.getToken()))
+                    return gson.toJson(new Mensagem("231", "Fields missing.", null));
+                return excluirCategorias(req.getToken(), req.getCategoryIds());
 
             default:
                 return gson.toJson(new Mensagem("402", "Invalid op.", null));

@@ -17,7 +17,6 @@ public class Main {
         Scanner entradaUsuario;
         ServerSocket soqueteServidor = null;
         List<Pair<String,Boolean>> usuariosLogados = Collections.synchronizedList(new ArrayList<Pair<String,Boolean>>());
-        List<Categoria> categorias = Collections.synchronizedList(new ArrayList<Categoria>());
 
         try {
             System.out.println("O IP desta máquina é " + Inet4Address.getLocalHost().getHostAddress());
@@ -28,7 +27,7 @@ public class Main {
 
             System.out.println("Aguardando conexões");
             while(true) {
-                new ConexaoTCP(soqueteServidor.accept(), new Controlador(usuariosLogados, categorias));
+                new ConexaoTCP(soqueteServidor.accept(), new Controlador(usuariosLogados));
             }
         }
         catch (Exception e) {

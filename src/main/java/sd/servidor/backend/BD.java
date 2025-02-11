@@ -16,6 +16,7 @@ public class BD {
     private PreparedStatement queryDeleteUser;
     // Queries categoria
     private PreparedStatement queryInsertCat;
+    private PreparedStatement querySelectCat;
     private PreparedStatement queryUpdateCat;
     private PreparedStatement queryDeleteCat;
 
@@ -35,6 +36,7 @@ public class BD {
         bd.queryDeleteUser = bd.conexao.prepareStatement("DELETE FROM usuarios WHERE ra = ?");
 
         bd.queryInsertCat = bd.conexao.prepareStatement("INSERT INTO categorias (nome, descricao) VALUES(?, ?)");
+        bd.querySelectCat = bd.conexao.prepareStatement("SELECT id, nome, descricao FROM categorias WHERE id = ?");
         bd.queryUpdateCat = bd.conexao.prepareStatement("UPDATE categorias SET nome = ?, descricao = ? WHERE id = ?");
         bd.queryDeleteCat = bd.conexao.prepareStatement("DELETE FROM categorias WHERE id = ?");
 
@@ -149,6 +151,19 @@ public class BD {
     public void deletarCategoria(int id) throws SQLException {
         this.queryDeleteCat.setInt(1, id);
         this.queryDeleteCat.executeUpdate();
+    }
+
+    public Categoria encontrarCategoria(int id) throws SQLException {
+        this.querySelectCat.setInt(1, id);
+        ResultSet resultado = this.querySelectCat.executeQuery();
+
+        if (!resultado.next()) return null; // Se não houver resultados
+
+        return new Categoria(
+                String.valueOf(resultado.getInt("id")),
+                resultado.getString("nome"),
+                resultado.getString("descricao")
+        );
     }
 
     public Categoria[] listarCategorias() throws SQLException {

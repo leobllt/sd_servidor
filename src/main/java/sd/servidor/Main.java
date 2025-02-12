@@ -4,9 +4,7 @@ package sd.servidor;
 
 import sd.servidor.backend.ConexaoTCP;
 import sd.servidor.backend.Controlador;
-import sd.servidor.backend.Categoria;
 import sd.servidor.backend.Pair;
-
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.util.*;

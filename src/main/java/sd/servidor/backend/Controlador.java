@@ -95,9 +95,13 @@ public class Controlador {
             }
             else {
                 if(nome == null) nome = usuario.getNome();
-                if(senha == null) senha = usuario.getSenha();
-                this.bancoDados.editarUsuario(RA, nome, senha);
+                nome = (nome.length() > 40) ? nome.substring(0,40) : nome;// Ajustando nome
 
+                if(senha == null) senha = usuario.getSenha();
+                if(senha.length() != 4)
+                    return gson.toJson(new Mensagem("124", "Unknown error.", null));
+
+                this.bancoDados.editarUsuario(RA, nome, senha);
                 return gson.toJson(new Mensagem("120", "Account successfully updated.", null));
             }
 

@@ -2,19 +2,27 @@ package sd.servidor.backend;
 
 // @Author Leonardo Bellato
 
+import java.util.Objects;
+
 public class Usuario {
-    private final String RA;
+    private String id;
+    private String RA;
     private String nome;
-    private final String token;
-    private final boolean admin;
+    private String token;
+    private boolean admin;
     private String senha;
 
-    public Usuario(String RA, String nome, String senha, String token, boolean admin) {
+    public Usuario(String id, String RA, String nome, String senha, String token, boolean admin) {
+        this.id = id;
         this.RA = RA;
         this.nome = nome;
         this.senha = senha;
         this.token = token;
         this.admin = admin;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getRA() {
@@ -41,12 +49,29 @@ public class Usuario {
         return this.token;
     }
 
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public boolean isAdmin() {
         return this.admin;
     }
 
     @Override
     public String toString() {
-        return "Usuario(" + this.RA + ", " + this.nome + ", " + token + ", " + senha + ", " + admin + ")";
+        return "Usuario (" + this.RA + ", " + (admin ? "Admin" : "Comum") + ")";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Usuario usuario = (Usuario) obj;
+        return this.RA.equals(usuario.RA);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(RA);
     }
 }

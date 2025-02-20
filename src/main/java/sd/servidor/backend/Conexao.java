@@ -4,18 +4,22 @@ package sd.servidor.backend;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-public class ConexaoTCP extends Thread {
+public class Conexao extends Thread {
     // Exclusivo de cada thread:
     private Socket soqueteCliente;
     private Controlador controlador;
     private BufferedReader entradaSoquete;
     private PrintWriter saidaSoquete;
     private boolean executando;
+    private BD bancoDados;
 
-    public ConexaoTCP(Socket soqueteCliente, Controlador controlador) {
+    public Conexao(Socket soqueteCliente, Controlador controlador, BD bancoDados) {
         this.soqueteCliente = soqueteCliente;
         this.controlador = controlador;
+        this.bancoDados = bancoDados;
         executando = true;
         System.out.println("Conectado com " + soqueteCliente.getInetAddress().getHostAddress() + ":" + soqueteCliente.getPort());
         start();
@@ -32,7 +36,7 @@ public class ConexaoTCP extends Thread {
                 break;
             }
         }
-        this.controlador.desconectarBD();
+        this.controlador.desconectarBD(this.bancoDados);
     }
 
     public void comunicar() throws IOException {
@@ -41,7 +45,7 @@ public class ConexaoTCP extends Thread {
         if(requisicaoJson != null) {
             System.out.println("CLIENTE " + this.soqueteCliente.getInetAddress().getHostAddress() + ": " + requisicaoJson);
             // Processando pedido
-            String respostaJson = this.controlador.processarRequisicao(requisicaoJson);
+            String respostaJson = this.controlador.processarRequisicao(requisicaoJson, this.bancoDados);
             // Respondendo
             this.saidaSoquete.println(respostaJson);
             System.out.println("SERVIDOR: " + respostaJson);
